@@ -1,0 +1,23 @@
+name: Smoke
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: smoke-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  smoke:
+    uses: ./.github/workflows/_run-suite.yml
+    with:
+      job_name: UI Smoke
+      npm_script: test:smoke
+      timeout_minutes: 30
+      generate_storage_states: true
+      artifact_name: smoke-reports
+      retry_count: 1
+    secrets: inherit

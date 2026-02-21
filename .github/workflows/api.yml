@@ -1,0 +1,23 @@
+name: API
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: api-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  api:
+    uses: ./.github/workflows/_run-suite.yml
+    with:
+      job_name: API Regression
+      npm_script: test:api
+      timeout_minutes: 25
+      generate_storage_states: false
+      artifact_name: api-reports
+      retry_count: 1
+    secrets: inherit

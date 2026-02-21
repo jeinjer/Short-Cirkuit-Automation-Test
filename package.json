@@ -1,0 +1,47 @@
+{
+  "name": "ui-automation-starter",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Playwright + Cucumber + TypeScript UI automation starter (black-box)",
+  "scripts": {
+    "auth:client": "tsx scripts/create-storage-state.ts --role client --out storageStates/client.json",
+    "auth:admin": "tsx scripts/create-storage-state.ts --role admin --out storageStates/admin.json",
+    "test": "cucumber-js --config cucumber.js",
+    "test:ui": "cucumber-js --config cucumber.js",
+    "test:api": "cross-env TAGS=\"@api\" cucumber-js --config cucumber.js",
+    "test:smoke": "cross-env TAGS=\"@smoke\" cucumber-js --config cucumber.js",
+    "test:regression": "cross-env TAGS=\"@regression\" cucumber-js --config cucumber.js",
+    "report": "node scripts/generate-report.cjs",
+    "clean": "node scripts/clean.cjs",
+    "pretest": "npm run clean",
+    "posttest": "npm run report",
+    "pretest:ui": "npm run clean",
+    "posttest:ui": "npm run report",
+    "pretest:api": "npm run clean",
+    "posttest:api": "npm run report",
+    "pretest:smoke": "npm run clean",
+    "posttest:smoke": "npm run report",
+    "pretest:regression": "npm run clean",
+    "posttest:regression": "npm run report"
+  },
+  "dependencies": {
+    "@cucumber/cucumber": "^11.0.1",
+    "chai": "^5.1.1",
+    "dotenv": "^16.4.5",
+    "multiple-cucumber-html-reporter": "^3.7.0",
+    "playwright": "^1.50.1"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.58.2",
+    "@types/chai": "^4.3.20",
+    "@types/node": "^22.10.2",
+    "cross-env": "^7.0.3",
+    "rimraf": "^6.0.1",
+    "ts-node": "^10.9.2",
+    "tsx": "^4.21.0",
+    "typescript": "^5.7.2"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

@@ -1,0 +1,99 @@
+name: Run Test Suite (Reusable)
+
+on:
+  workflow_call:
+    inputs:
+      job_name:
+        required: true
+        type: string
+      npm_script:
+        required: true
+        type: string
+      timeout_minutes:
+        required: false
+        default: 40
+        type: number
+      generate_storage_states:
+        required: false
+        default: true
+        type: boolean
+      artifact_name:
+        required: true
+        type: string
+      retry_count:
+        required: false
+        default: 1
+        type: number
+    secrets:
+      BASE_URL:
+        required: true
+      TEST_EMAIL:
+        required: true
+      TEST_PASSWORD:
+        required: true
+      TEST_ADMIN_EMAIL:
+        required: false
+      TEST_ADMIN_PASSWORD:
+        required: false
+
+jobs:
+  run:
+    name: ${{ inputs.job_name }}
+    runs-on: ubuntu-latest
+    timeout-minutes: ${{ inputs.timeout_minutes }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps
+
+      - name: Create .env for CI
+        run: |
+          cat > .env << 'EOF'
+          BASE_URL=${{ secrets.BASE_URL }}
+          TEST_EMAIL=${{ secrets.TEST_EMAIL }}
+          TEST_PASSWORD=${{ secrets.TEST_PASSWORD }}
+          TEST_ADMIN_EMAIL=${{ secrets.TEST_ADMIN_EMAIL }}
+          TEST_ADMIN_PASSWORD=${{ secrets.TEST_ADMIN_PASSWORD }}
+          HEADLESS=true
+          STEP_TIMEOUT=90000
+          EXPECT_TIMEOUT=30000
+          NAV_TIMEOUT=60000
+          ACTION_TIMEOUT=25000
+          PARALLEL=1
+          RETRY=${{ inputs.retry_count }}
+          TRACE=onfail
+          VIDEO=off
+          SCREENSHOT=onfail
+          DETAILED_LOGS=true
+          LOG_TO_CONSOLE=true
+          EOF
+
+      - name: Generate storage states
+        if: ${{ inputs.generate_storage_states }}
+        run: |
+          npm run auth:client
+          npm run auth:admin
+
+      - name: Run suite
+        run: npm run ${{ inputs.npm_script }}
+
+      - name: Upload reports and evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.artifact_name }}-${{ github.run_id }}
+          path: reports
+          retention-days: 14
+          if-no-files-found: ignore

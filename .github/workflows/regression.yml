@@ -1,0 +1,39 @@
+name: Regression
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+  schedule:
+    - cron: "0 3 * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: regression-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  regression:
+    if: ${{ github.event_name != 'schedule' }}
+    uses: ./.github/workflows/_run-suite.yml
+    with:
+      job_name: UI Regression
+      npm_script: test:regression
+      timeout_minutes: 50
+      generate_storage_states: true
+      artifact_name: regression-reports
+      retry_count: 1
+    secrets: inherit
+
+  regression-nightly:
+    if: ${{ github.event_name == 'schedule' }}
+    uses: ./.github/workflows/_run-suite.yml
+    with:
+      job_name: UI Regression Nightly
+      npm_script: test:regression
+      timeout_minutes: 55
+      generate_storage_states: true
+      artifact_name: regression-nightly-reports
+      retry_count: 2
+    secrets: inherit
