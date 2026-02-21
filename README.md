@@ -21,7 +21,7 @@ Enfoque:
 
 ### 2.1 UI (end-to-end)
 Dominios cubiertos actualmente:
-- `auth`: login, logout, registro, forgot/reset password, visibilidad de header segun sesion.
+- `auth`: login, logout, registro, visibilidad de header segun sesion.
 - `catalog`: listado, filtros, sort, busqueda, stock.
 - `product`: detalle, inquiry, manejo de producto sin stock o SKU invalido.
 - `cart`: agregar, incrementar/decrementar, eliminar item, vaciar carrito.
@@ -73,7 +73,6 @@ src/
     world.ts
     hooks.ts
     data.ts
-    mailhog.ts
   assets/
 
 scripts/
@@ -354,4 +353,3 @@ npm run test:regression
 
 Y revisar:
 - `reports/index.html`
-

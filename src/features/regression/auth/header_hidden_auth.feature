@@ -9,5 +9,3 @@ Feature: Header - Rutas Auth
       | ruta             |
       | /login           |
       | /registro        |
-      | /forgot-password |
-      | /reset-password  |
