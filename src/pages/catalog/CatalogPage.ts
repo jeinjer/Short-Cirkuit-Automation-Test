@@ -20,6 +20,14 @@ export class CatalogPage {
     return this.page.locator('a[href^="/producto/"] h3');
   }
 
+  private loader(): Locator {
+    return this.page.getByText(/cargando productos/i).first();
+  }
+
+  private emptyState(): Locator {
+    return this.page.getByText(/no se encontraron productos/i).first();
+  }
+
   async getFirstProductName(): Promise<string> {
     await this.waitForLoaded();
     const el = this.productNameEls().first();
@@ -40,7 +48,6 @@ export class CatalogPage {
   }
 
   async applyCategoryFilter(categoryLabel: string, expectedId: string): Promise<void> {
-    // Sidebar button (NOTEBOOKS, MONITORES, etc.)
     const btn = this.page.getByRole('button', { name: categoryLabel }).first();
     await btn.waitFor({ state: 'visible', timeout: config.timeouts.expect });
 
@@ -62,7 +69,6 @@ export class CatalogPage {
       clearBtn.click(),
     ]);
 
-    // esperar que desaparezca category si estaba
     await this.page.waitForTimeout(150);
   }
 
@@ -74,7 +80,6 @@ export class CatalogPage {
 
     await select.selectOption({ label: optionLabel });
 
-    // esperar a que cambie algo en la lista (o al menos a que termine el render)
     const start = Date.now();
     while (Date.now() - start < config.timeouts.expect) {
       await this.page.waitForTimeout(200);
@@ -88,15 +93,27 @@ export class CatalogPage {
   async hasAnyProductNameContaining(term: string): Promise<boolean> {
     const target = this.normalizeText(term);
     const start = Date.now();
+    let lastError: Error | null = null;
 
     while (Date.now() - start < config.timeouts.expect) {
-      await this.waitForLoaded().catch(() => {});
-      const names = await this.getProductNames(12).catch(() => []);
-      const ok = names.some(n => this.normalizeText(n).includes(target));
-      if (ok) return true;
-      await this.page.waitForTimeout(200);
+      try {
+        await this.waitForLoaded();
+        const names = await this.getProductNames(12);
+        const ok = names.some(n => this.normalizeText(n).includes(target));
+        if (ok) return true;
+
+        const loaderVisible = await this.loader().isVisible().catch(() => false);
+        if (!loaderVisible) return false;
+      } catch (err) {
+        lastError = err instanceof Error ? err : new Error(String(err));
+        const msg = this.normalizeText(lastError.message);
+        if (msg.includes('empty state visible') || msg.includes('catalogo sin productos')) return false;
+      }
+
+      await this.page.waitForTimeout(250);
     }
 
+    if (lastError) throw lastError;
     return false;
   }
 
@@ -105,14 +122,27 @@ export class CatalogPage {
   }
 
   async waitForLoaded(): Promise<void> {
-    // Si hay loader, esperamos a que desaparezca (no siempre está)
-    const loader = this.page.getByText(/cargando productos/i);
-    await loader.waitFor({ state: 'detached', timeout: config.timeouts.expect }).catch(() => { });
+    const start = Date.now();
+    let sawLoader = false;
 
-    // Si el catálogo quedó sin productos, lo tratamos como fail P0
-    const emptyState = this.page.getByText(/no se encontraron productos/i);
-    const isEmpty = await emptyState.isVisible().catch(() => false);
-    if (isEmpty) throw new Error('Catálogo sin productos (empty state visible).');
+    while (Date.now() - start < config.timeouts.expect) {
+      const loaderVisible = await this.loader().isVisible().catch(() => false);
+      const hasProducts = await this.productLinks().first().isVisible().catch(() => false);
+      const isEmpty = await this.emptyState().isVisible().catch(() => false);
+
+      if (hasProducts) return;
+      if (isEmpty) throw new Error('Catalogo sin productos (empty state visible).');
+
+      if (loaderVisible) sawLoader = true;
+      await this.page.waitForTimeout(loaderVisible ? 300 : 200);
+    }
+
+    const loaderStillVisible = await this.loader().isVisible().catch(() => false);
+    if (loaderStillVisible || sawLoader) {
+      throw new Error('El loader del catalogo no finalizo dentro del timeout.');
+    }
+
+    throw new Error('El catalogo no mostro productos ni empty state dentro del timeout.');
   }
 
   async hasAtLeastOneProduct(): Promise<boolean> {
@@ -191,11 +221,9 @@ export class CatalogPage {
         link.click()
       ]);
 
-      // si el detalle muestra "Sin stock", nos quedamos
       const sinStock = await this.page.getByText(/sin stock/i).first().isVisible().catch(() => false);
       if (sinStock) return true;
 
-      // volver catálogo
       const back = this.page.getByText(/volver al catálogo/i).first();
       await Promise.all([
         waitForUrlAndLoad(this.page, /\/catalogo/i, config.timeouts.nav),

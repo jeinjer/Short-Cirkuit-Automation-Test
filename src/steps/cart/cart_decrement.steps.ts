@@ -11,13 +11,13 @@ async function poll<T>(
   intervalMs = 200
 ): Promise<T> {
   const start = Date.now();
-  let last: T;
+  let last: T = await fn();
   while (Date.now() - start < timeoutMs) {
     last = await fn();
     if (predicate(last)) return last;
     await new Promise(r => setTimeout(r, intervalMs));
   }
-  // @ts-ignore
+  
   return last;
 }
 

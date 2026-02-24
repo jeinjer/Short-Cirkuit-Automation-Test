@@ -12,14 +12,14 @@ async function poll<T>(
   intervalMs = 200
 ): Promise<T> {
   const start = Date.now();
-  let last: T;
+  let last: T = await fn();
   while (Date.now() - start < timeoutMs) {
-    last = await fn();
     if (predicate(last)) return last;
     await new Promise(r => setTimeout(r, intervalMs));
+    last = await fn();
   }
-  // @ts-ignore
-  return last;
+  
+  throw new Error(`Timeout waiting for condition after ${timeoutMs}ms`);
 }
 
 When('abro el carrito', async function (this: CustomWorld) {
@@ -47,7 +47,7 @@ When('incremento la cantidad del primer item', async function (this: CustomWorld
 
   await cart.incrementFirstItem();
 
-  // esperar que suba
+  
   const afterQty = await poll(
     () => cart.getFirstItemQuantity(),
     v => v === beforeQty + 1,

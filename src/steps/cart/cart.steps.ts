@@ -21,7 +21,7 @@ Given('estoy logueado como cliente', async function (this: CustomWorld) {
   await login.goto(config.baseUrl);
   await login.login(email, password);
 
-  // confirmación mínima
+  
   await userMenu.waitFor({ state: 'visible', timeout: config.timeouts.expect });
 });
 
@@ -36,7 +36,7 @@ When('abro el primer producto con stock', async function (this: CustomWorld) {
 
 When('abro el primer producto con stock suficiente para incrementar', async function (this: CustomWorld) {
   const catalog = new CatalogPage(this.page);
-  await catalog.openFirstProductWithStock(2); // minStock=2
+  await catalog.openFirstProductWithStock(2); 
 
   const pdp = new ProductDetailPage(this.page);
   await pdp.waitLoaded();

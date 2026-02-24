@@ -2,12 +2,12 @@ import * as path from 'path';
 import * as fs from 'fs';
 import dotenv from 'dotenv';
 
-// Load .env if present
+
 const envPath = path.resolve(process.cwd(), '.env');
 if (fs.existsSync(envPath)) {
   dotenv.config({ path: envPath });
 } else {
-  // allow running without .env (CI may inject env vars)
+  
   dotenv.config();
 }
 

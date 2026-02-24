@@ -12,6 +12,7 @@
     "test:smoke": "cross-env TAGS=\"@smoke\" cucumber-js --config cucumber.js",
     "test:regression": "cross-env TAGS=\"@regression\" cucumber-js --config cucumber.js",
     "report": "node scripts/generate-report.cjs",
+    "failed": "node scripts/list-failed.cjs",
     "clean": "node scripts/clean.cjs",
     "pretest": "npm run clean",
     "posttest": "npm run report",

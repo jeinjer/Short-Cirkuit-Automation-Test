@@ -30,7 +30,6 @@ export class LoginPage {
   }
 
   async login(email: string, password: string) {
-    // Si ya esta logueado, no forzamos login.
     if (await this.userMenu.isVisible().catch(() => false)) return;
 
     const emailInput = this.emailField();
@@ -55,8 +54,6 @@ export class LoginPage {
     }
 
     await this.page.waitForLoadState('networkidle').catch(() => {});
-
-    // Confirmacion minima post login.
     await this.userMenu.waitFor({ state: 'visible', timeout: config.timeouts.expect }).catch(() => {});
   }
 

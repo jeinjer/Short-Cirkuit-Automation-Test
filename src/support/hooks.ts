@@ -16,7 +16,7 @@ import { CustomWorld } from './world';
 
 let browser: Browser | undefined;
 
-// Timeout global de Cucumber (por step)
+
 setDefaultTimeout((config as any).timeouts?.step ?? 60000);
 
 function ensureDir(p: string) {
@@ -75,8 +75,6 @@ Before(async function (this: CustomWorld, scenario) {
   pushLog(this, `SCENARIO_START | ${this.scenarioName}`);
 
   const tags = (scenario.pickle.tags || []).map((t: any) => t.name);
-
-  // StorageState por tags
   let storageStatePath: string | undefined;
   if (tags.includes('@auth_client')) storageStatePath = path.resolve('storageStates/client.json');
   if (tags.includes('@auth_admin')) storageStatePath = path.resolve('storageStates/admin.json');
@@ -147,7 +145,6 @@ Before(async function (this: CustomWorld, scenario) {
         await emptyText.waitFor({ state: 'visible', timeout: config.timeouts.expect }).catch(() => {});
       }
     } catch {
-      // no bloquear el run por limpieza
     }
   }
   
@@ -184,7 +181,6 @@ AfterStep(async function (this: CustomWorld, step) {
       await this.attach(`STEP_SCREENSHOT: ${stepSsPath}`);
       await this.attach(buf, 'image/png');
     } catch {
-      // ignore
     }
   }
 });
@@ -209,10 +205,7 @@ After(async function (this: CustomWorld, scenario) {
       await this.attach(this.logs.join('\n'), 'text/plain');
     }
   } catch {
-    // ignore
   }
-
-  // Screenshot
   const ssMode = config.evidence.screenshot;
   if (ssMode === 'on' || (ssMode === 'onfail' && failed)) {
     const ssPath = path.resolve('reports/screenshots', `${artifactId}.png`);
@@ -221,11 +214,8 @@ After(async function (this: CustomWorld, scenario) {
       const buf = fs.readFileSync(ssPath);
       await this.attach(buf, 'image/png');
     } catch {
-      // ignore
     }
   }
-
-  // Trace
   const traceMode = config.evidence.trace;
   if (traceMode === 'on' || (traceMode === 'onfail' && failed)) {
     const tracePath = path.resolve('reports/traces', `${artifactId}.zip`);
@@ -233,30 +223,24 @@ After(async function (this: CustomWorld, scenario) {
       await this.context.tracing.stop({ path: tracePath });
       await this.attach(`TRACE: ${tracePath}`);
     } catch {
-      // ignore
     }
   } else {
     try {
       await this.context.tracing.stop();
     } catch {
-      // ignore
     }
   }
-
-  // Video retention
   const videoMode = config.evidence.video;
   const video = this.page.video();
 
   try {
     await this.page.close();
   } catch {
-    // ignore
   }
 
   try {
     await this.context.close();
   } catch {
-    // ignore
   }
 
   if (video && videoMode === 'onfail' && !failed) {
@@ -264,7 +248,6 @@ After(async function (this: CustomWorld, scenario) {
       const p = await video.path();
       if (p && fs.existsSync(p)) fs.unlinkSync(p);
     } catch {
-      // ignore
     }
   }
 });

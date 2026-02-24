@@ -30,7 +30,7 @@ Then('el botón {string} no está disponible', async function (this: CustomWorld
   const btn = this.page.getByRole('button', { name: new RegExp(buttonText, 'i') }).first();
   const visible = await btn.isVisible().catch(() => false);
 
-  // si existe, debe estar deshabilitado; si no existe, también es válido
+  
   if (!visible) return;
 
   const enabled = await btn.isEnabled().catch(() => false);

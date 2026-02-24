@@ -10,7 +10,7 @@ export class ProductDetailPage {
   private priceLabel: Locator;
   private stockText: Locator;
 
-  // NUEVO
+  
   private addToCartBtn: Locator;
   private cartBtn: Locator;
   private toastAdded: Locator;
@@ -30,7 +30,7 @@ export class ProductDetailPage {
     this.priceLabel = page.getByText(/precio final/i).first();
     this.stockText = page.getByText(/stock disponible:|sin stock/i).first();
 
-    // NUEVO (según tu UI real)
+    
     this.addToCartBtn = page.getByRole('button', { name: /agregar al carrito/i }).first();
     this.cartBtn = page.locator('button[title="Carrito"]').first();
     this.toastAdded = page.locator('[data-sonner-toast]').filter({ hasText: /producto agregado al carrito/i }).first();
@@ -42,7 +42,7 @@ export class ProductDetailPage {
     this.inquiryToast = page.locator('[data-sonner-toast]').filter({ hasText: /consulta enviada|te responderemos/i }).first();
   }
 
-  // MANTENÉ tu waitLoaded() que ya pasa
+  
 
   async waitLoaded(): Promise<boolean> {
     const inProductUrl = /\/producto\/.+/i.test(this.page.url());
@@ -80,10 +80,10 @@ async canAddToCart(minStock = 1): Promise<boolean> {
     await this.addToCartBtn.waitFor({ state: 'visible', timeout: config.timeouts.expect });
     await this.addToCartBtn.click();
 
-    // señal primaria: badge con número en el botón de carrito
+    
     await this.cartBadge.waitFor({ state: 'visible', timeout: config.timeouts.expect }).catch(() => {});
 
-    // señal secundaria: toast
+    
     await this.toastAdded.waitFor({ state: 'visible', timeout: 4000 }).catch(() => {});
   }
 

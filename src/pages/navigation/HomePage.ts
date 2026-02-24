@@ -23,7 +23,6 @@ export class HomePage {
   }
 
   async assertCatalogSectionHasProducts() {
-    // sin testids: buscamos links a detalle producto en la home
     const productLinks = this.page.locator('a[href^="/producto/"]');
     await expect(productLinks.first()).toBeVisible();
   }

@@ -13,7 +13,7 @@ When('vacío el carrito desde el panel', async function (this: CustomWorld) {
 });
 
 Then('veo el carrito vacío', async function (this: CustomWorld) {
-  // Si ya está abierto, no clickea header (evita intercept)
+  
   const cart = new CartDrawerPage(this.page);
   const headingVisible = await this.page
     .getByRole('heading', { name: /mi carrito/i })

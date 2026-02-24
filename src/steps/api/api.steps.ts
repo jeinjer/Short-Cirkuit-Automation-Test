@@ -4,7 +4,7 @@ import type { CustomWorld } from '../../support/world';
 import { config } from '../../support/env';
 
 function apiUrl(path: string): string {
-  if (/^https?:\/\//i.test(path)) return path;
+  if (/^https?:\/\//.test(path)) return path;
   const normalized = path.startsWith('/') ? path : `/${path}`;
   return `${config.baseUrl}${normalized}`;
 }
@@ -25,11 +25,34 @@ async function apiRequest(
     headers.Authorization = `Bearer ${world.state.apiToken}`;
   }
 
-  const res = await fetch(apiUrl(path), {
-    method,
-    headers,
-    body: body !== undefined ? JSON.stringify(body) : undefined
-  });
+  let currentUrl = apiUrl(path);
+  let currentMethod = method;
+  let currentBody = body !== undefined ? JSON.stringify(body) : undefined;
+  let res: Response | undefined;
+  for (let i = 0; i < 5; i++) {
+    res = await fetch(currentUrl, {
+      method: currentMethod,
+      headers,
+      body: currentBody,
+      redirect: 'manual'
+    });
+
+    if (res.status < 300 || res.status >= 400) break;
+
+    const location = res.headers.get('location');
+    if (!location) break;
+    currentUrl = new URL(location, currentUrl).toString();
+
+    if (res.status === 303) {
+      currentMethod = 'GET';
+      currentBody = undefined;
+    } else if ((res.status === 301 || res.status === 302) && currentMethod !== 'GET') {
+      currentMethod = 'GET';
+      currentBody = undefined;
+    }
+  }
+
+  if (!res) throw new Error('No se pudo obtener respuesta de API.');
 
   world.state.apiStatus = res.status;
 

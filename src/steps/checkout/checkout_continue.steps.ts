@@ -15,18 +15,13 @@ When('hago click en {string}', async function (this: CustomWorld, text: string) 
   }
 });
 
-Then('se abre WhatsApp o un enlace de WhatsApp', async function (this: CustomWorld) {
-  // Caso 1: popup
-  const popup = (this as any).popup as any;
+Then('se abre WhatsApp o un enlace de WhatsApp', async function (this: CustomWorld) {  const popup = (this as any).popup as any;
   if (popup) {
     await popup.waitForLoadState('domcontentloaded').catch(() => {});
     const u = popup.url().toLowerCase();
     expect(u.includes('whatsapp') || u.includes('wa.me')).to.equal(true);
     await popup.close().catch(() => {});
     return;
-  }
-
-  // Caso 2: navegación misma pestaña
-  const u = this.page.url().toLowerCase();
+  }  const u = this.page.url().toLowerCase();
   expect(u.includes('whatsapp') || u.includes('wa.me')).to.equal(true);
 });

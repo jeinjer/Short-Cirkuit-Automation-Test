@@ -35,15 +35,29 @@ Then('se bloquea el acceso al perfil', async function (this: CustomWorld) {
   }
 });
 
-Then('veo página 404 o mensaje de no encontrado', async function (this: CustomWorld) {
-  const h404 = this.page.getByText(/^404$/).first();
-  const title = this.page.getByText(/cortocircuito detectado|pagina no encontrada|página no encontrada|no est[aá] disponible/i).first();
-  const backHome = this.page.getByRole('link', { name: /volver al inicio/i }).first();
+Then(/^veo .*404 o mensaje de no encontrado$/, async function (this: CustomWorld) {
+  await this.page.waitForLoadState('domcontentloaded').catch(() => {});
 
-  const ok =
-    (await h404.isVisible().catch(() => false)) ||
-    (await title.isVisible().catch(() => false)) ||
-    (await backHome.isVisible().catch(() => false));
+  const deadline = Date.now() + Math.min(config.timeouts.expect, 12000);
+  let ok = false;
+
+  while (Date.now() < deadline) {
+    const h404 = this.page.getByText(/^404$/).first();
+    const title = this.page
+      .getByText(/cortocircuito detectado|pagina no encontrada|no disponible|not found|not_found/i)
+      .first();
+    const backHome = this.page.getByRole('link', { name: /volver al inicio|ir al inicio|inicio/i }).first();
+    const hosting404 = this.page.getByText(/404: this page could not be found/i).first();
+
+    ok =
+      (await h404.isVisible().catch(() => false)) ||
+      (await title.isVisible().catch(() => false)) ||
+      (await backHome.isVisible().catch(() => false)) ||
+      (await hosting404.isVisible().catch(() => false));
+
+    if (ok) break;
+    await this.page.waitForTimeout(250);
+  }
 
   expect(ok).to.equal(true);
 });

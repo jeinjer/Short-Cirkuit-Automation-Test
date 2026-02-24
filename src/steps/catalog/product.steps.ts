@@ -8,7 +8,7 @@ let catalog: CatalogPage;
 let product: ProductDetailPage;
 
 When('abro el primer producto del listado', async function (this: CustomWorld) {
-  // Reusa el mismo Page, no dependemos de data-testid
+  
   catalog = new CatalogPage(this.page);
   await catalog.openFirstProduct();
   product = new ProductDetailPage(this.page);

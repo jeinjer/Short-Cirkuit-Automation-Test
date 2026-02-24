@@ -6,7 +6,7 @@ export class CustomWorld extends World {
   context!: BrowserContext;
   page!: Page;
 
-  // scenario-scoped metadata
+  
   scenarioName = '';
   startTime = Date.now();
   logs: string[] = [];

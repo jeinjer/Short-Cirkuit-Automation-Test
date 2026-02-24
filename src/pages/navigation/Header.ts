@@ -46,11 +46,9 @@ export class Header {
         } else if (await logoutLink.isVisible().catch(() => false)) {
             await logoutLink.click();
         } else {
-            // fallback por texto si el menú no usa roles
             await this.page.locator('text=/cerrar sesión|cerrar sesion|salir|logout/i').first().click();
         }
 
-        // confirmación: desaparece el botón "Usuario"
         await this.userBtn.waitFor({ state: 'detached', timeout: config.timeouts.expect }).catch(() => { });
     }
 

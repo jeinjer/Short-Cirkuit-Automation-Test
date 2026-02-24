@@ -55,7 +55,6 @@ export class AdminPage {
 
     const cardsVisible = (await this.page.locator('div.bg-white\/5, div[class*="bg-white/5"]').count().catch(() => 0)) >= 2;
 
-    // fallback extra por texto, para evitar falsos negativos por roles/accesibilidad inestable
     const tabsByText =
       bodyText.includes('producto') &&
       bodyText.includes('consulta') &&
@@ -79,13 +78,31 @@ export class AdminPage {
 
     const btn = this.findTabLocator(rx);
     await btn.waitFor({ state: 'visible', timeout: config.timeouts.expect });
+    await btn.click();
 
-    await Promise.all([
-      waitForUrlAndLoad(this.page, new RegExp(`[?&]tab=${expectedTab}(&|$)`, 'i'), config.timeouts.nav).catch(() => {}),
-      btn.click()
+    const urlPattern = new RegExp(`[?&]tab=${expectedTab}(&|$)`, 'i');
+    const shortWait = Math.min(config.timeouts.expect, 2500);
+
+    await Promise.race([
+      waitForUrlAndLoad(this.page, urlPattern, shortWait).catch(() => {}),
+      this.page
+        .waitForFunction(
+          ({ label }) => {
+            const nodes = Array.from(document.querySelectorAll('button,[role="tab"],a,[role="button"]'));
+            const target = nodes.find((el) => (el.textContent || '').toLowerCase().includes(label));
+            if (!target) return false;
+
+            const ariaSelected = target.getAttribute('aria-selected');
+            const cls = (target as HTMLElement).className || '';
+            const styleState = `${cls} ${(target as HTMLElement).getAttribute('data-state') || ''}`.toLowerCase();
+            return ariaSelected === 'true' || styleState.includes('active') || styleState.includes('selected');
+          },
+          { label: expectedTab.slice(0, 5).toLowerCase() },
+          { timeout: shortWait }
+        )
+        .catch(() => {}),
+      this.page.waitForTimeout(350)
     ]);
-
-    await this.page.waitForTimeout(300);
   }
 
   async assertTabContent(name: 'Productos' | 'Consultas' | 'Ordenes') {
